@@ -1,31 +1,29 @@
-import { Injectable } from '@nestjs/common';
-
-import { v4 } from 'uuid';
-
-import { Cart } from '../models';
+import { Inject, Injectable } from '@nestjs/common';
+import { cartItems, carts } from 'src/drizzle/schema';
+import { eq } from 'drizzle-orm';
+import { PG_CONNECTION } from 'src/constants';
 
 @Injectable()
 export class CartService {
-  private userCarts: Record<string, Cart> = {};
+  constructor(@Inject(PG_CONNECTION) private db) {}
 
-  findByUserId(userId: string): Cart {
-    return this.userCarts[ userId ];
+  async findByUserId(userId: string) {
+    return this.db.query.carts.findFirst({
+      where: eq(carts.userId, userId),
+      columns: { id: true },
+      with: {
+        items: { columns: { count: true }, with: { product: true } },
+      },
+    });
   }
 
-  createByUserId(userId: string) {
-    const id = v4();
-    const userCart = {
-      id,
-      items: [],
-    };
-
-    this.userCarts[ userId ] = userCart;
-
-    return userCart;
+  async createByUserId(userId: string) {
+    await this.db.insert(carts).values({ userId });
+    return this.findByUserId(userId);
   }
 
-  findOrCreateByUserId(userId: string): Cart {
-    const userCart = this.findByUserId(userId);
+  async findOrCreateByUserId(userId: string) {
+    const userCart = await this.findByUserId(userId);
 
     if (userCart) {
       return userCart;
@@ -34,22 +32,22 @@ export class CartService {
     return this.createByUserId(userId);
   }
 
-  updateByUserId(userId: string, { items }: Cart): Cart {
-    const { id, ...rest } = this.findOrCreateByUserId(userId);
+  async updateByUserId(
+    userId: string,
+    { items }: { items: { productId: string; count: number }[] },
+  ) {
+    const { id } = await this.db.query.carts.findFirst({
+      where: eq(carts.userId, userId),
+    });
+    await this.db
+      .insert(cartItems)
+      .values(items.map((item) => ({ ...item, cartId: id })));
 
-    const updatedCart = {
-      id,
-      ...rest,
-      items: [ ...items ],
-    }
-
-    this.userCarts[ userId ] = { ...updatedCart };
-
-    return { ...updatedCart };
+    return this.findByUserId(userId);
   }
 
-  removeByUserId(userId): void {
-    this.userCarts[ userId ] = null;
+  async removeByUserId(userId: string) {
+    const res = await this.db.delete(carts).where(eq(carts.userId, userId));
+    console.log(res);
   }
-
 }

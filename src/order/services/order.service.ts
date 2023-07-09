@@ -1,39 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { v4 } from 'uuid';
-
-import { Order } from '../models';
+import { Inject, Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
+import { PG_CONNECTION } from 'src/constants';
+import { orders } from 'src/drizzle/schema';
 
 @Injectable()
 export class OrderService {
-  private orders: Record<string, Order> = {}
+  constructor(@Inject(PG_CONNECTION) private db) {}
 
-  findById(orderId: string): Order {
-    return this.orders[ orderId ];
+  async findById(orderId: string) {
+    return this.db.query.orders.findFirst({ where: eq(orders.id, orderId) });
   }
 
   create(data: any) {
-    const id = v4()
-    const order = {
-      ...data,
-      id,
-      status: 'inProgress',
-    };
-
-    this.orders[ id ] = order;
-
-    return order;
+    return this.db.insert(orders).values({ ...data, status: 'OPEN' });
   }
 
   update(orderId, data) {
-    const order = this.findById(orderId);
-
-    if (!order) {
-      throw new Error('Order does not exist.');
-    }
-
-    this.orders[ orderId ] = {
-      ...data,
-      id: orderId,
-    }
+    return this.db
+      .update(orders)
+      .set(data)
+      .where(eq(orders.id, orderId))
+      .returning();
   }
 }

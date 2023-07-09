@@ -1,28 +1,23 @@
-import { Injectable } from '@nestjs/common';
-
-import { v4 } from 'uuid';
-
+import { Inject, Injectable } from '@nestjs/common';
 import { User } from '../models';
+import { PG_CONNECTION } from 'src/constants';
+import { eq } from 'drizzle-orm';
+import { users } from 'src/drizzle/schema';
 
 @Injectable()
 export class UsersService {
-  private readonly users: Record<string, User>;
+  constructor(@Inject(PG_CONNECTION) private db) {}
 
-  constructor() {
-    this.users = {}
+  async findOne(userId: string) {
+    return this.db.query.users.findFirst({ where: eq(users.id, userId) });
   }
 
-  findOne(userId: string): User {
-    return this.users[ userId ];
+  async findOneByName(name: string) {
+    return this.db.query.users.findFirst({ where: eq(users.name, name) });
   }
 
-  createOne({ name, password }: User): User {
-    const id = v4();
-    const newUser = { id: name || id, name, password };
-
-    this.users[ id ] = newUser;
-
-    return newUser;
+  async createOne(userDTO: User) {
+    const res = await this.db.insert(users).values(userDTO).returning();
+    return res[0];
   }
-
 }
