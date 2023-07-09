@@ -59,18 +59,10 @@ export class CartCdkStack extends cdk.Stack {
 
     const nestJsLambda = new NodejsFunction(this, 'nest-js-lambda', {
       functionName: 'nest-js-lambda',
-      entry: path.resolve(__dirname, '..', 'dist', 'handler.js'),
+      entry: path.resolve(__dirname, '..', 'dist', 'main.js'),
       runtime: lambda.Runtime.NODEJS_18_X,
       bundling: {
-        externalModules: [
-          'aws-sdk',
-          'class-transformer',
-          'class-validator',
-          '@nestjs',
-          '@nestjs/core',
-          '@nestjs/microservices',
-          '@nestjs/websockets',
-        ],
+        externalModules: ['aws-sdk'],
       },
       // vpc,
       environment: {
