@@ -1,23 +1,29 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { User } from '../models';
 import { PG_CONNECTION } from 'src/constants';
 import { eq } from 'drizzle-orm';
-import { users } from 'src/drizzle/schema';
+import * as schema from 'src/drizzle/schema';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 @Injectable()
 export class UsersService {
-  constructor(@Inject(PG_CONNECTION) private db) {}
+  constructor(
+    @Inject(PG_CONNECTION) private db: NodePgDatabase<typeof schema>,
+  ) {}
 
   async findOne(userId: string) {
-    return this.db.query.users.findFirst({ where: eq(users.id, userId) });
+    return this.db.query.users.findFirst({
+      where: eq(schema.users.id, userId),
+    });
   }
 
   async findOneByName(name: string) {
-    return this.db.query.users.findFirst({ where: eq(users.name, name) });
+    return this.db.query.users.findFirst({
+      where: eq(schema.users.name, name),
+    });
   }
 
-  async createOne(userDTO: User) {
-    const res = await this.db.insert(users).values(userDTO).returning();
+  async createOne(userDTO: { name: string; password: string; email: string }) {
+    const res = await this.db.insert(schema.users).values(userDTO).returning();
     return res[0];
   }
 }

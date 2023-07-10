@@ -34,7 +34,7 @@ export const cartItems = pgTable('cart_items', {
 });
 
 export const orders = pgTable('orders', {
-  id: uuid('id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom().notNull(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
@@ -88,6 +88,10 @@ export const orderRelations = relations(orders, ({ one }) => ({
   cart: one(carts, {
     fields: [orders.cartId],
     references: [carts.id],
+  }),
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
   }),
 }));
 

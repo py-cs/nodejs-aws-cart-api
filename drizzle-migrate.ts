@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import * as postgres from 'postgres';
+import postgres from 'postgres';
 import { env } from './src/env';
 import * as schema from './src/drizzle/schema';
 
@@ -11,6 +11,7 @@ const sql = postgres({
   password: env.DB_PASSWORD,
   database: env.DB_NAME,
   max: 1,
+  ssl: 'allow',
 });
 export const db = drizzle(sql, { schema });
 

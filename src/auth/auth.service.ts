@@ -20,7 +20,7 @@ export class AuthService {
       return user;
     }
 
-    return this.usersService.createOne({ name, password });
+    return this.usersService.createOne({ name, password, email: '' });
   }
 
   login(user: User, type = 'jwt') {

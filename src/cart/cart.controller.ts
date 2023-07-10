@@ -81,7 +81,6 @@ export class CartController {
 
     if (!(cart && cart.items.length)) {
       const statusCode = HttpStatus.BAD_REQUEST;
-      // req.statusCode = statusCode;
 
       return {
         statusCode,
@@ -89,16 +88,14 @@ export class CartController {
       };
     }
 
-    const { id: cartId, items } = cart;
+    const { id: cartId } = cart;
     const total = calculateCartTotal(cart);
-    const order = this.orderService.create({
-      ...body, // TODO: validate and pick only necessary data
+    const order = await this.orderService.create({
+      ...body,
       userId,
       cartId,
-      items,
       total,
     });
-    this.cartService.removeByUserId(userId);
 
     return {
       statusCode: HttpStatus.OK,

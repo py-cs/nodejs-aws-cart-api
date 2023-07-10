@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "4be18775-190b-4cb0-b279-f6e16bde7c8f",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "ed966b36-c3f7-41e2-8e35-a721636f577a",
+  "prevId": "4be18775-190b-4cb0-b279-f6e16bde7c8f",
   "tables": {
     "cart_items": {
       "name": "cart_items",
@@ -129,7 +129,8 @@
           "name": "id",
           "type": "uuid",
           "primaryKey": true,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "user_id": {
           "name": "user_id",

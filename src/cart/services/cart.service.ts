@@ -1,15 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { cartItems, carts } from 'src/drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { PG_CONNECTION } from 'src/constants';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import * as schema from 'src/drizzle/schema';
 
 @Injectable()
 export class CartService {
-  constructor(@Inject(PG_CONNECTION) private db) {}
+  constructor(
+    @Inject(PG_CONNECTION) private db: NodePgDatabase<typeof schema>,
+  ) {}
 
   async findByUserId(userId: string) {
     return this.db.query.carts.findFirst({
-      where: eq(carts.userId, userId),
+      where: and(eq(carts.userId, userId), eq(carts.status, 'OPEN')),
       columns: { id: true },
       with: {
         items: { columns: { count: true }, with: { product: true } },
@@ -18,7 +22,7 @@ export class CartService {
   }
 
   async createByUserId(userId: string) {
-    await this.db.insert(carts).values({ userId });
+    await this.db.insert(carts).values({ userId, status: 'OPEN' });
     return this.findByUserId(userId);
   }
 
@@ -28,7 +32,6 @@ export class CartService {
     if (userCart) {
       return userCart;
     }
-
     return this.createByUserId(userId);
   }
 
@@ -36,18 +39,21 @@ export class CartService {
     userId: string,
     { items }: { items: { productId: string; count: number }[] },
   ) {
-    const { id } = await this.db.query.carts.findFirst({
-      where: eq(carts.userId, userId),
-    });
-    await this.db
+    const cart = await this.findByUserId(userId);
+
+    const res = await this.db
       .insert(cartItems)
-      .values(items.map((item) => ({ ...item, cartId: id })));
+      .values(items.map((item) => ({ ...item, cartId: cart.id })))
+      .returning();
 
     return this.findByUserId(userId);
   }
 
   async removeByUserId(userId: string) {
-    const res = await this.db.delete(carts).where(eq(carts.userId, userId));
-    console.log(res);
+    const { id: cartId } = await this.db.query.carts.findFirst({
+      where: and(eq(carts.userId, userId), eq(carts.status, 'OPEN')),
+    });
+
+    await this.db.delete(cartItems).where(eq(cartItems.cartId, cartId));
   }
 }
