@@ -17,4 +17,5 @@ export const env = createEnv({
       .pipe(z.number()),
   },
   runtimeEnv: process.env,
+  skipValidation: true,
 });
