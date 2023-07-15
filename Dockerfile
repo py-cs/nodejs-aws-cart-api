@@ -17,6 +17,8 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 4000
+ENV PORT=8080
+
+EXPOSE 8080
 
 CMD [ "node", "./dist/main" ]
