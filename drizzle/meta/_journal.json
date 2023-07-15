@@ -15,6 +15,13 @@
       "when": 1688967193236,
       "tag": "0001_dashing_kingpin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1689398687292,
+      "tag": "0002_clammy_slapstick",
+      "breakpoints": true
     }
   ]
 }

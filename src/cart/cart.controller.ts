@@ -33,11 +33,7 @@ export class CartController {
       getUserIdFromRequest(req),
     );
 
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'OK',
-      data: { cart, total: calculateCartTotal(cart) },
-    };
+    return cart.items;
   }
 
   @UseGuards(JwtAuthGuard)
@@ -50,14 +46,16 @@ export class CartController {
       body,
     );
 
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'OK',
-      data: {
-        cart,
-        total: calculateCartTotal(cart),
-      },
-    };
+    return cart.items;
+
+    // return {
+    //   statusCode: HttpStatus.OK,
+    //   message: 'OK',
+    //   data: {
+    //     cart,
+    //     total: calculateCartTotal(cart),
+    //   },
+    // };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -91,7 +89,9 @@ export class CartController {
     const { id: cartId } = cart;
     const total = calculateCartTotal(cart);
     const order = await this.orderService.create({
-      ...body,
+      delivery: body.address,
+      comments: body.address.comment,
+      payment: body.payment || { type: 'cash' },
       userId,
       cartId,
       total,

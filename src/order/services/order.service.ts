@@ -17,7 +17,6 @@ export class OrderService {
 
   async create(data: any) {
     const { cartId } = data;
-    console.log('creating order for cart', cartId);
     await this.db.transaction(async (tx) => {
       await tx
         .update(schema.carts)

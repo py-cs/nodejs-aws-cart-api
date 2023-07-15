@@ -45,7 +45,7 @@ export const orders = pgTable('orders', {
   delivery: json('delivery').notNull(),
   comments: text('comments'),
   status: statusEnum('status'),
-  total: integer('total').notNull(),
+  total: doublePrecision('total').notNull(),
 });
 
 export const products = pgTable('products', {

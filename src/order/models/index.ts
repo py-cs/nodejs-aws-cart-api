@@ -11,8 +11,10 @@ export type Order = {
     creditCard?: any;
   };
   delivery: {
-    type: string;
-    address: any;
+    address: string;
+    firstName: string;
+    lastName: string;
+    comment?: string;
   };
   comments: string;
   status: string;
