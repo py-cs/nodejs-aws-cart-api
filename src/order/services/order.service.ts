@@ -1,39 +1,38 @@
-import { Injectable } from '@nestjs/common';
-import { v4 } from 'uuid';
-
-import { Order } from '../models';
+import { Inject, Injectable } from '@nestjs/common';
+import { eq } from 'drizzle-orm';
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { PG_CONNECTION } from 'src/constants';
+import { orders } from 'src/drizzle/schema';
+import * as schema from 'src/drizzle/schema';
 
 @Injectable()
 export class OrderService {
-  private orders: Record<string, Order> = {}
+  constructor(
+    @Inject(PG_CONNECTION) private db: NodePgDatabase<typeof schema>,
+  ) {}
 
-  findById(orderId: string): Order {
-    return this.orders[ orderId ];
+  async findById(orderId: string) {
+    return this.db.query.orders.findFirst({ where: eq(orders.id, orderId) });
   }
 
-  create(data: any) {
-    const id = v4()
-    const order = {
-      ...data,
-      id,
-      status: 'inProgress',
-    };
+  async create(data: any) {
+    const { cartId } = data;
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(schema.carts)
+        .set({ status: 'ORDERED' })
+        .where(eq(schema.carts.id, cartId));
+      await tx.insert(schema.orders).values({ ...data, status: 'OPEN' });
+    });
 
-    this.orders[ id ] = order;
-
-    return order;
+    return this.db.query.orders.findFirst({ where: eq(orders.cartId, cartId) });
   }
 
   update(orderId, data) {
-    const order = this.findById(orderId);
-
-    if (!order) {
-      throw new Error('Order does not exist.');
-    }
-
-    this.orders[ orderId ] = {
-      ...data,
-      id: orderId,
-    }
+    return this.db
+      .update(orders)
+      .set(data)
+      .where(eq(orders.id, orderId))
+      .returning();
   }
 }
